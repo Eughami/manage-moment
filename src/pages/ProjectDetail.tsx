@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -9,8 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import TaskList from "@/components/TaskList";
-import FileGrid from "@/components/FileGrid";
+import { TaskList } from "@/components/TaskList";
+import { FileGrid } from "@/components/FileGrid";
 import ProjectOverview from "@/components/ProjectOverview";
 
 const ProjectDetail = () => {
