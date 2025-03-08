@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Task, TaskStatus, File, api } from "@/services/api";
@@ -11,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { TaskEditDialog } from "@/components/TaskEditDialog";
 
 const MOCK_USER = {
   id: "1",
@@ -25,6 +25,8 @@ const ProjectDetail = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -35,7 +37,6 @@ const ProjectDetail = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Load tasks when component mounts
     if (id) {
       api.getTasks(id).then(fetchedTasks => {
         setTasks(fetchedTasks);
@@ -54,7 +55,8 @@ const ProjectDetail = () => {
   }, [id]);
 
   const handleTaskSelect = (task: Task) => {
-    toast.info("Opening task details");
+    setSelectedTask(task);
+    setIsEditTaskOpen(true);
   };
 
   const handleTaskDelete = (taskId: string) => {
@@ -104,7 +106,6 @@ const ProjectDetail = () => {
         toast.success("Task created successfully");
         setIsAddTaskOpen(false);
         
-        // Reset form
         setNewTask({
           title: "",
           description: "",
@@ -118,6 +119,37 @@ const ProjectDetail = () => {
     } catch (error) {
       console.error("Error creating task:", error);
       toast.error("Failed to create task");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateTask = async (updates: Partial<Task>) => {
+    if (!id || !selectedTask) return;
+    
+    if (updates.title && !updates.title.trim()) {
+      toast.error("Task title is required");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const updatedTask = await api.updateTask(id, selectedTask.id, updates);
+      
+      if (updatedTask) {
+        setTasks(tasks.map(task => 
+          task.id === selectedTask.id ? { ...task, ...updates } : task
+        ));
+        toast.success("Task updated successfully");
+        setIsEditTaskOpen(false);
+        setSelectedTask(null);
+      } else {
+        toast.error("Failed to update task");
+      }
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast.error("Failed to update task");
     } finally {
       setIsLoading(false);
     }
@@ -275,6 +307,15 @@ const ProjectDetail = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Task Dialog */}
+      <TaskEditDialog
+        task={selectedTask}
+        isOpen={isEditTaskOpen}
+        onOpenChange={setIsEditTaskOpen}
+        onSave={handleUpdateTask}
+        isLoading={isLoading}
+      />
     </div>
   );
 };

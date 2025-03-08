@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Task, TaskStatus, Priority, User } from "@/services/api";
 import {
@@ -106,11 +105,10 @@ export function TaskList({
               tasks.map((task) => (
                 <TableRow 
                   key={task.id}
-                  onClick={() => onTaskSelect(task)}
                   className="cursor-pointer hover:bg-muted/30 transition-colors"
                 >
-                  <TableCell className="font-medium">{task.title}</TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium" onClick={() => onTaskSelect(task)}>{task.title}</TableCell>
+                  <TableCell onClick={() => onTaskSelect(task)}>
                     <div className="flex items-center space-x-2">
                       <Avatar className="h-6 w-6">
                         <AvatarImage src={task.assignee.avatar} alt={task.assignee.name} />
@@ -119,7 +117,7 @@ export function TaskList({
                       <span className="text-sm">{task.assignee.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={() => onTaskSelect(task)}>
                     {task.dueDate ? (
                       <span className="text-sm">
                         {format(new Date(task.dueDate), "MMM d, yyyy")}
@@ -179,7 +177,7 @@ export function TaskList({
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={() => onTaskSelect(task)}>
                     <Badge
                       className={cn(
                         "cursor-default",
@@ -203,7 +201,7 @@ export function TaskList({
                             onTaskSelect(task);
                           }}
                         >
-                          View Details
+                          Edit Task
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={(e) => {
