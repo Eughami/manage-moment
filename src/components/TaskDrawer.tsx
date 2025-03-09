@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Task, TaskStatus } from "@/services/api";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -10,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, FileUp, Trash } from "lucide-react";
+import { CalendarIcon, FileUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TaskDrawerProps {
@@ -226,15 +225,7 @@ export function TaskDrawer({
             </div>
           </div>
           
-          <div className="flex justify-between pt-4 border-t mt-auto">
-            <Button 
-              variant="destructive" 
-              onClick={() => onDelete(task.id)}
-              className="flex items-center"
-            >
-              <Trash className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
+          <div className="flex justify-end pt-4 border-t mt-auto">
             <div className="flex space-x-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
