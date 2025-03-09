@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Task, TaskStatus, Priority, User } from "@/services/api";
 import {
@@ -18,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TaskListProps {
@@ -91,13 +92,12 @@ export function TaskList({
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Priority</TableHead>
-              <TableHead className="w-[70px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {tasks.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                   No tasks found. Create your first task.
                 </TableCell>
               </TableRow>
@@ -106,9 +106,10 @@ export function TaskList({
                 <TableRow 
                   key={task.id}
                   className="cursor-pointer hover:bg-muted/30 transition-colors"
+                  onClick={() => onTaskSelect(task)}
                 >
-                  <TableCell className="font-medium" onClick={() => onTaskSelect(task)}>{task.title}</TableCell>
-                  <TableCell onClick={() => onTaskSelect(task)}>
+                  <TableCell className="font-medium">{task.title}</TableCell>
+                  <TableCell>
                     <div className="flex items-center space-x-2">
                       <Avatar className="h-6 w-6">
                         <AvatarImage src={task.assignee.avatar} alt={task.assignee.name} />
@@ -117,7 +118,7 @@ export function TaskList({
                       <span className="text-sm">{task.assignee.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell onClick={() => onTaskSelect(task)}>
+                  <TableCell>
                     {task.dueDate ? (
                       <span className="text-sm">
                         {format(new Date(task.dueDate), "MMM d, yyyy")}
@@ -177,7 +178,7 @@ export function TaskList({
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
-                  <TableCell onClick={() => onTaskSelect(task)}>
+                  <TableCell>
                     <Badge
                       className={cn(
                         "cursor-default",
@@ -186,34 +187,6 @@ export function TaskList({
                     >
                       {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="opacity-50 hover:opacity-100">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onTaskSelect(task);
-                          }}
-                        >
-                          Edit Task
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onTaskDelete(task.id);
-                          }}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))

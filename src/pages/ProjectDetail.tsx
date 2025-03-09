@@ -1,16 +1,12 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Task, TaskStatus, File, api } from "@/services/api";
 import { toast } from "sonner";
 import { ProjectHeader } from "@/components/project/ProjectHeader";
 import { ProjectTabs } from "@/components/project/ProjectTabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { TaskEditDialog } from "@/components/TaskEditDialog";
+import { TaskDrawer } from "@/components/TaskDrawer";
+import { NewTaskDrawer } from "@/components/NewTaskDrawer";
 
 const MOCK_USER = {
   id: "1",
@@ -27,13 +23,6 @@ const ProjectDetail = () => {
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [newTask, setNewTask] = useState({
-    title: "",
-    description: "",
-    status: "todo" as TaskStatus,
-    priority: "medium" as "low" | "medium" | "high",
-    dueDate: null as string | null
-  });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -67,6 +56,7 @@ const ProjectDetail = () => {
         if (success) {
           setTasks(tasks.filter(task => task.id !== taskId));
           toast.success("Task deleted successfully");
+          setIsEditTaskOpen(false);
         } else {
           toast.error("Failed to delete task");
         }
@@ -81,7 +71,13 @@ const ProjectDetail = () => {
     setIsAddTaskOpen(true);
   };
 
-  const handleCreateTask = async () => {
+  const handleCreateTask = async (newTask: {
+    title: string;
+    description: string;
+    status: TaskStatus;
+    priority: "low" | "medium" | "high";
+    dueDate: string | null;
+  }) => {
     if (!id) return;
     
     if (!newTask.title.trim()) {
@@ -105,14 +101,6 @@ const ProjectDetail = () => {
         setTasks([...tasks, createdTask]);
         toast.success("Task created successfully");
         setIsAddTaskOpen(false);
-        
-        setNewTask({
-          title: "",
-          description: "",
-          status: "todo",
-          priority: "medium",
-          dueDate: null
-        });
       } else {
         toast.error("Failed to create task");
       }
@@ -229,91 +217,20 @@ const ProjectDetail = () => {
         />
       </div>
 
-      {/* Add Task Dialog */}
-      <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add New Task</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={newTask.title}
-                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                placeholder="Task title"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={newTask.description}
-                onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                placeholder="Task description"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={newTask.status}
-                  onValueChange={(value) => setNewTask({ ...newTask, status: value as TaskStatus })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todo">To Do</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="review">Review</SelectItem>
-                    <SelectItem value="done">Done</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="priority">Priority</Label>
-                <Select
-                  value={newTask.priority}
-                  onValueChange={(value) => setNewTask({ ...newTask, priority: value as "low" | "medium" | "high" })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="dueDate">Due Date (Optional)</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={newTask.dueDate || ''}
-                onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value || null })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddTaskOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateTask} disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create Task'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Task Drawer Components */}
+      <NewTaskDrawer
+        isOpen={isAddTaskOpen}
+        onOpenChange={setIsAddTaskOpen}
+        onCreateTask={handleCreateTask}
+        isLoading={isLoading}
+      />
 
-      {/* Edit Task Dialog */}
-      <TaskEditDialog
+      <TaskDrawer
         task={selectedTask}
         isOpen={isEditTaskOpen}
         onOpenChange={setIsEditTaskOpen}
         onSave={handleUpdateTask}
+        onDelete={handleTaskDelete}
         isLoading={isLoading}
       />
     </div>
