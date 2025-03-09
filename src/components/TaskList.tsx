@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Task, TaskStatus, Priority, User } from "@/services/api";
 import {
@@ -19,9 +18,10 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { AlertTriangle, Plus } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 
 interface TaskListProps {
   tasks: Task[];
@@ -38,6 +38,9 @@ export function TaskList({
   onAddTask,
   onTaskStatusChange,
 }: TaskListProps) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+
   const getStatusColor = (status: TaskStatus) => {
     switch (status) {
       case "todo":
@@ -72,6 +75,20 @@ export function TaskList({
       .map((part) => part[0])
       .join("")
       .toUpperCase();
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, taskId: string) => {
+    e.stopPropagation();
+    setTaskToDelete(taskId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (taskToDelete) {
+      onTaskDelete(taskToDelete);
+      setTaskToDelete(null);
+    }
+    setDeleteDialogOpen(false);
   };
 
   return (
@@ -198,12 +215,9 @@ export function TaskList({
                             variant="ghost" 
                             size="icon" 
                             className="h-8 w-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onTaskDelete(task.id);
-                            }}
+                            onClick={(e) => handleDeleteClick(e, task.id)}
                           >
-                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                            <Trash className="h-4 w-4 text-red-500" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -218,6 +232,14 @@ export function TaskList({
           </TableBody>
         </Table>
       </div>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        setOpen={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title="Delete Task"
+        description="Are you sure you want to delete this task? This action cannot be undone."
+      />
     </div>
   );
 }
