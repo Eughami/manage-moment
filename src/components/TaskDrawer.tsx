@@ -1,6 +1,6 @@
 
-import { useState, useRef } from "react";
-import { Task, TaskStatus, User } from "@/services/api";
+import { useState, useRef, useEffect } from "react";
+import { Task, TaskStatus } from "@/services/api";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,9 +34,9 @@ export function TaskDrawer({
   const [date, setDate] = useState<Date | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Reset form when task changes
-  useState(() => {
-    if (task) {
+  // Reset form when task changes or drawer opens
+  useEffect(() => {
+    if (task && isOpen) {
       setEditedTask({
         title: task.title,
         description: task.description,
@@ -47,7 +47,7 @@ export function TaskDrawer({
       
       setDate(task.dueDate ? new Date(task.dueDate) : undefined);
     }
-  });
+  }, [task, isOpen]);
 
   const handleSave = () => {
     onSave(editedTask);
@@ -86,12 +86,12 @@ export function TaskDrawer({
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md" side="right">
+      <SheetContent className="sm:max-w-md flex flex-col" side="right">
         <SheetHeader className="pb-4">
           <SheetTitle>Task Details</SheetTitle>
         </SheetHeader>
         
-        <div className="grid gap-6 py-4">
+        <div className="grid gap-6 py-4 flex-grow overflow-y-auto">
           <div className="grid gap-2">
             <Label htmlFor="edit-title">Title</Label>
             <Input
@@ -225,7 +225,7 @@ export function TaskDrawer({
           </div>
         </div>
         
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-between mt-6 pt-4 border-t sticky bottom-0 bg-background">
           <Button 
             variant="destructive" 
             onClick={() => onDelete(task.id)}

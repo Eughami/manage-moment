@@ -68,12 +68,12 @@ export function NewTaskDrawer({
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md" side="right">
+      <SheetContent className="sm:max-w-md flex flex-col" side="right">
         <SheetHeader className="pb-4">
           <SheetTitle>Create New Task</SheetTitle>
         </SheetHeader>
         
-        <div className="grid gap-6 py-4">
+        <div className="grid gap-6 py-4 flex-grow overflow-y-auto">
           <div className="grid gap-2">
             <Label htmlFor="title">Title</Label>
             <Input
@@ -196,7 +196,7 @@ export function NewTaskDrawer({
           </div>
         </div>
         
-        <div className="flex justify-end mt-6 space-x-2">
+        <div className="flex justify-end mt-6 space-x-2 pt-4 border-t sticky bottom-0 bg-background">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
