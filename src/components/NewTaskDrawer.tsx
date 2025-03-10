@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { TaskStatus } from "@/services/api";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -45,7 +46,9 @@ export function NewTaskDrawer({
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle file uploads here
     console.log("Files selected:", e.target.files);
+    // In a real implementation, you would upload these files and attach them to the task
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -59,6 +62,7 @@ export function NewTaskDrawer({
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       console.log("Files dropped:", e.dataTransfer.files);
+      // In a real implementation, you would upload these files and attach them to the task
     }
   };
 
@@ -98,7 +102,7 @@ export function NewTaskDrawer({
                       {date ? format(date, "PPP") : "Select date"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
+                  <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
                       selected={date}

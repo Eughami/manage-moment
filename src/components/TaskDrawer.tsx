@@ -33,6 +33,7 @@ export function TaskDrawer({
   const [date, setDate] = useState<Date | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Reset form when task changes or drawer opens
   useEffect(() => {
     if (task && isOpen) {
       setEditedTask({
@@ -52,7 +53,9 @@ export function TaskDrawer({
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle file uploads here
     console.log("Files selected:", e.target.files);
+    // In a real implementation, you would upload these files and attach them to the task
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -66,6 +69,7 @@ export function TaskDrawer({
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       console.log("Files dropped:", e.dataTransfer.files);
+      // In a real implementation, you would upload these files and attach them to the task
     }
   };
 
@@ -126,7 +130,7 @@ export function TaskDrawer({
                       {date ? format(date, "PPP") : "Select date"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
+                  <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
                       selected={date}
