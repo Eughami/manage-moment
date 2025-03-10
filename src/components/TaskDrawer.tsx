@@ -1,6 +1,6 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Task, TaskStatus } from "@/services/api";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,9 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { format } from "date-fns";
-import { CalendarIcon, FileUp, X } from "lucide-react";
+import { CalendarIcon, FileUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TaskDrawerProps {
@@ -81,154 +80,148 @@ export function TaskDrawer({
   if (!task) return null;
 
   return (
-    <Drawer open={isOpen} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[90%] sm:max-w-md mx-auto">
-        <div className="h-full flex flex-col overflow-hidden">
-          <DrawerHeader className="pb-4">
-            <DrawerTitle>Task Details</DrawerTitle>
-            <DrawerClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </DrawerClose>
-          </DrawerHeader>
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+      <SheetContent className="sm:max-w-md" side="right">
+        <div className="flex flex-col h-full">
+          <SheetHeader className="pb-4">
+            <SheetTitle>Task Details</SheetTitle>
+          </SheetHeader>
           
-          <div className="flex-1 overflow-auto px-6">
-            <div className="grid gap-6 py-4">
+          <div className="grid gap-6 py-4 flex-1">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editedTask.title || task.title}
+                onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+                placeholder="Task title"
+                className="text-lg font-medium"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label>Assignee</Label>
+              <div className="flex items-center space-x-2 py-2">
+                <Avatar>
+                  <AvatarImage src={task.assignee.avatar} alt={task.assignee.name} />
+                  <AvatarFallback>{getInitials(task.assignee.name)}</AvatarFallback>
+                </Avatar>
+                <span>{task.assignee.name}</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-title">Title</Label>
-                <Input
-                  id="edit-title"
-                  value={editedTask.title || task.title}
-                  onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
-                  placeholder="Task title"
-                  className="text-lg font-medium"
-                />
+                <Label htmlFor="edit-due-date">Due Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "justify-start text-left font-normal",
+                        !date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date ? format(date, "PPP") : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={(newDate) => {
+                        setDate(newDate);
+                        setEditedTask({ 
+                          ...editedTask, 
+                          dueDate: newDate ? format(newDate, "yyyy-MM-dd") : null 
+                        });
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               
               <div className="grid gap-2">
-                <Label>Assignee</Label>
-                <div className="flex items-center space-x-2 py-2">
-                  <Avatar>
-                    <AvatarImage src={task.assignee.avatar} alt={task.assignee.name} />
-                    <AvatarFallback>{getInitials(task.assignee.name)}</AvatarFallback>
-                  </Avatar>
-                  <span>{task.assignee.name}</span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-due-date">Due Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "justify-start text-left font-normal",
-                          !date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP") : "Select date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={(newDate) => {
-                          setDate(newDate);
-                          setEditedTask({ 
-                            ...editedTask, 
-                            dueDate: newDate ? format(newDate, "yyyy-MM-dd") : null 
-                          });
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-status">Status</Label>
-                  <Select
-                    value={editedTask.status || task.status}
-                    onValueChange={(value) => setEditedTask({ ...editedTask, status: value as TaskStatus })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todo">To Do</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="review">Review</SelectItem>
-                      <SelectItem value="done">Done</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="edit-priority">Priority</Label>
+                <Label htmlFor="edit-status">Status</Label>
                 <Select
-                  value={editedTask.priority || task.priority}
-                  onValueChange={(value) => setEditedTask({ ...editedTask, priority: value as "low" | "medium" | "high" })}
+                  value={editedTask.status || task.status}
+                  onValueChange={(value) => setEditedTask({ ...editedTask, status: value as TaskStatus })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
+                    <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="todo">To Do</SelectItem>
+                    <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="review">Review</SelectItem>
+                    <SelectItem value="done">Done</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <div
-                  className="border rounded-lg p-4 min-h-[200px]"
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                >
-                  <textarea
-                    id="edit-description"
-                    value={editedTask.description || task.description}
-                    onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
-                    placeholder="Task description"
-                    className="w-full h-full min-h-[150px] resize-none border-none focus:outline-none"
-                  />
-                </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="edit-priority">Priority</Label>
+              <Select
+                value={editedTask.priority || task.priority}
+                onValueChange={(value) => setEditedTask({ ...editedTask, priority: value as "low" | "medium" | "high" })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <div
+                className="border rounded-lg p-4 min-h-[200px]"
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
+                <textarea
+                  id="edit-description"
+                  value={editedTask.description || task.description}
+                  onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
+                  placeholder="Task description"
+                  className="w-full h-full min-h-[150px] resize-none border-none focus:outline-none"
+                />
               </div>
-              
-              <div className="grid gap-2">
-                <Label>Attachments</Label>
-                <div className="flex flex-wrap gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center"
-                  >
-                    <FileUp className="h-4 w-4 mr-2" />
-                    Add files
-                  </Button>
-                  <input
-                    type="file"
-                    multiple
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <div className="text-sm text-muted-foreground mt-2">
-                    Drag and drop files into the description area or click 'Add files'
-                  </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label>Attachments</Label>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center"
+                >
+                  <FileUp className="h-4 w-4 mr-2" />
+                  Add files
+                </Button>
+                <input
+                  type="file"
+                  multiple
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <div className="text-sm text-muted-foreground mt-2">
+                  Drag and drop files into the description area or click 'Add files'
                 </div>
               </div>
             </div>
           </div>
           
-          <DrawerFooter className="px-6 py-4">
+          <div className="flex justify-end pt-4 border-t mt-auto">
             <div className="flex space-x-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
@@ -237,9 +230,9 @@ export function TaskDrawer({
                 {isLoading ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
-          </DrawerFooter>
+          </div>
         </div>
-      </DrawerContent>
-    </Drawer>
+      </SheetContent>
+    </Sheet>
   );
 }
