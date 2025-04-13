@@ -5,11 +5,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Label } from '@/components/ui/label';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 
 interface Beneficiary {
   id: string;
@@ -35,6 +35,9 @@ const initialData: Beneficiary[] = [
 const Beneficiaries = () => {
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>(initialData);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentBeneficiary, setCurrentBeneficiary] = useState<Beneficiary | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -70,19 +73,62 @@ const Beneficiaries = () => {
   ];
 
   const handleAddNew = () => {
+    setIsEditing(false);
+    setCurrentBeneficiary(null);
+    form.reset({
+      name: '',
+      email: '',
+      phone: '',
+      location: ''
+    });
     setIsDialogOpen(true);
-    form.reset();
+  };
+
+  const handleView = (beneficiary: Beneficiary) => {
+    setIsEditing(true);
+    setCurrentBeneficiary(beneficiary);
+    form.reset({
+      name: beneficiary.name,
+      email: beneficiary.email,
+      phone: beneficiary.phone,
+      location: beneficiary.location
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (beneficiary: Beneficiary) => {
+    setCurrentBeneficiary(beneficiary);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (currentBeneficiary) {
+      setBeneficiaries(beneficiaries.filter(b => b.id !== currentBeneficiary.id));
+      toast.success('Beneficiary deleted successfully');
+      setIsDeleteDialogOpen(false);
+    }
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const newBeneficiary = {
-      id: `${Date.now()}`,
-      ...values
-    };
-    
-    setBeneficiaries([...beneficiaries, newBeneficiary]);
+    if (isEditing && currentBeneficiary) {
+      // Update existing beneficiary
+      const updatedBeneficiaries = beneficiaries.map(b => 
+        b.id === currentBeneficiary.id 
+          ? { ...b, ...values } 
+          : b
+      );
+      setBeneficiaries(updatedBeneficiaries);
+      toast.success('Beneficiary updated successfully');
+    } else {
+      // Add new beneficiary
+      const newBeneficiary: Beneficiary = {
+        id: `${Date.now()}`,
+        ...values
+      };
+      setBeneficiaries([...beneficiaries, newBeneficiary]);
+      toast.success('Beneficiary added successfully');
+    }
     setIsDialogOpen(false);
-    toast.success('Beneficiary added successfully');
   };
 
   return (
@@ -91,15 +137,19 @@ const Beneficiaries = () => {
         data={beneficiaries}
         columns={columns}
         onAddNew={handleAddNew}
+        onView={handleView}
+        onDelete={handleDelete}
         title="Beneficiaries"
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Add New Beneficiary</DialogTitle>
+            <DialogTitle>{isEditing ? 'Edit Beneficiary' : 'Add New Beneficiary'}</DialogTitle>
             <DialogDescription>
-              Enter the beneficiary details below to add them to the system.
+              {isEditing 
+                ? 'Edit the beneficiary details below.' 
+                : 'Enter the beneficiary details below to add them to the system.'}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -161,12 +211,20 @@ const Beneficiaries = () => {
               />
               
               <DialogFooter>
-                <Button type="submit">Add Beneficiary</Button>
+                <Button type="submit">{isEditing ? 'Update' : 'Add'} Beneficiary</Button>
               </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        setOpen={setIsDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete Beneficiary"
+        description={`Are you sure you want to delete ${currentBeneficiary?.name}? This action cannot be undone.`}
+      />
     </div>
   );
 };

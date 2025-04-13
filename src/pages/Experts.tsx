@@ -9,6 +9,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 
 interface Expert {
   id: string;
@@ -34,6 +35,9 @@ const initialData: Expert[] = [
 const Experts = () => {
   const [experts, setExperts] = useState<Expert[]>(initialData);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentExpert, setCurrentExpert] = useState<Expert | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,19 +73,62 @@ const Experts = () => {
   ];
 
   const handleAddNew = () => {
+    setIsEditing(false);
+    setCurrentExpert(null);
+    form.reset({
+      name: '',
+      specialization: '',
+      email: '',
+      experience: ''
+    });
     setIsDialogOpen(true);
-    form.reset();
+  };
+
+  const handleView = (expert: Expert) => {
+    setIsEditing(true);
+    setCurrentExpert(expert);
+    form.reset({
+      name: expert.name,
+      specialization: expert.specialization,
+      email: expert.email,
+      experience: expert.experience
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (expert: Expert) => {
+    setCurrentExpert(expert);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (currentExpert) {
+      setExperts(experts.filter(e => e.id !== currentExpert.id));
+      toast.success('Expert deleted successfully');
+      setIsDeleteDialogOpen(false);
+    }
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const newExpert = {
-      id: `${Date.now()}`,
-      ...values
-    };
-    
-    setExperts([...experts, newExpert]);
+    if (isEditing && currentExpert) {
+      // Update existing expert
+      const updatedExperts = experts.map(e => 
+        e.id === currentExpert.id 
+          ? { ...e, ...values } 
+          : e
+      );
+      setExperts(updatedExperts);
+      toast.success('Expert updated successfully');
+    } else {
+      // Add new expert
+      const newExpert: Expert = {
+        id: `${Date.now()}`,
+        ...values
+      };
+      setExperts([...experts, newExpert]);
+      toast.success('Expert added successfully');
+    }
     setIsDialogOpen(false);
-    toast.success('Expert added successfully');
   };
 
   return (
@@ -90,15 +137,19 @@ const Experts = () => {
         data={experts}
         columns={columns}
         onAddNew={handleAddNew}
+        onView={handleView}
+        onDelete={handleDelete}
         title="Experts"
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Add New Expert</DialogTitle>
+            <DialogTitle>{isEditing ? 'Edit Expert' : 'Add New Expert'}</DialogTitle>
             <DialogDescription>
-              Enter the expert details below to add them to the system.
+              {isEditing 
+                ? 'Edit the expert details below.' 
+                : 'Enter the expert details below to add them to the system.'}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -160,12 +211,20 @@ const Experts = () => {
               />
               
               <DialogFooter>
-                <Button type="submit">Add Expert</Button>
+                <Button type="submit">{isEditing ? 'Update' : 'Add'} Expert</Button>
               </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        setOpen={setIsDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete Expert"
+        description={`Are you sure you want to delete ${currentExpert?.name}? This action cannot be undone.`}
+      />
     </div>
   );
 };

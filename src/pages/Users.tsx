@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 
 interface User {
   id: string;
@@ -35,6 +36,9 @@ const initialData: User[] = [
 const Users = () => {
   const [users, setUsers] = useState<User[]>(initialData);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,19 +78,62 @@ const Users = () => {
   ];
 
   const handleAddNew = () => {
+    setIsEditing(false);
+    setCurrentUser(null);
+    form.reset({
+      name: '',
+      email: '',
+      role: '',
+      status: ''
+    });
     setIsDialogOpen(true);
-    form.reset();
+  };
+
+  const handleView = (user: User) => {
+    setIsEditing(true);
+    setCurrentUser(user);
+    form.reset({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (user: User) => {
+    setCurrentUser(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (currentUser) {
+      setUsers(users.filter(u => u.id !== currentUser.id));
+      toast.success('User deleted successfully');
+      setIsDeleteDialogOpen(false);
+    }
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const newUser = {
-      id: `${Date.now()}`,
-      ...values
-    };
-    
-    setUsers([...users, newUser]);
+    if (isEditing && currentUser) {
+      // Update existing user
+      const updatedUsers = users.map(u => 
+        u.id === currentUser.id 
+          ? { ...u, ...values } 
+          : u
+      );
+      setUsers(updatedUsers);
+      toast.success('User updated successfully');
+    } else {
+      // Add new user
+      const newUser: User = {
+        id: `${Date.now()}`,
+        ...values
+      };
+      setUsers([...users, newUser]);
+      toast.success('User added successfully');
+    }
     setIsDialogOpen(false);
-    toast.success('User added successfully');
   };
 
   return (
@@ -95,15 +142,19 @@ const Users = () => {
         data={users}
         columns={columns}
         onAddNew={handleAddNew}
+        onView={handleView}
+        onDelete={handleDelete}
         title="Users"
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
+            <DialogTitle>{isEditing ? 'Edit User' : 'Add New User'}</DialogTitle>
             <DialogDescription>
-              Enter the user details below to add them to the system.
+              {isEditing 
+                ? 'Edit the user details below.' 
+                : 'Enter the user details below to add them to the system.'}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -182,12 +233,20 @@ const Users = () => {
               />
               
               <DialogFooter>
-                <Button type="submit">Add User</Button>
+                <Button type="submit">{isEditing ? 'Update' : 'Add'} User</Button>
               </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        setOpen={setIsDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete User"
+        description={`Are you sure you want to delete ${currentUser?.name}? This action cannot be undone.`}
+      />
     </div>
   );
 };
