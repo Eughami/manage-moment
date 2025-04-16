@@ -1,11 +1,28 @@
+
 import React, { useState } from 'react';
 import { DataTable } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
-import { Plus, Eye, Trash } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import { Plus } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogClose 
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 import { toast } from 'sonner';
 
 interface Expert {
@@ -22,6 +39,21 @@ const defaultFormData: Omit<Expert, 'id'> = {
   specialization: '',
   experience: ''
 };
+
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Invalid email address.",
+  }),
+  specialization: z.string().min(2, {
+    message: "Specialization must be at least 2 characters.",
+  }),
+  experience: z.string().min(2, {
+    message: "Experience must be at least 2 characters.",
+  }),
+})
 
 const Experts = () => {
   const [items, setItems] = useState<Expert[]>([
@@ -49,7 +81,12 @@ const Experts = () => {
   ]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Expert | null>(null);
-  const [formData, setFormData] = useState<Omit<Expert, 'id'>>(defaultFormData);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: defaultFormData,
+    mode: "onChange"
+  })
 
   const columns = [
     {
@@ -75,30 +112,20 @@ const Experts = () => {
   ];
 
   const handleAddNew = () => {
-    setFormData(defaultFormData);
     setSelectedItem(null);
+    form.reset(defaultFormData);
     setIsDialogOpen(true);
   };
 
   const handleView = (item: Expert) => {
-    setFormData({
-      name: item.name,
-      email: item.email,
-      specialization: item.specialization,
-      experience: item.experience
-    });
     setSelectedItem(item);
+    form.reset(item);
     setIsDialogOpen(true);
   };
 
   const handleDelete = (item: Expert) => {
     setItems(items.filter((i) => i.id !== item.id));
     toast.success("Expert deleted successfully");
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSave = (formData: Partial<Expert>) => {
@@ -139,73 +166,79 @@ const Experts = () => {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{selectedItem ? "View/Edit Expert" : "Add New Expert"}</DialogTitle>
+            <DialogDescription>
+              {selectedItem ? "Update expert details." : "Add a new expert to the list."}
+            </DialogDescription>
           </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                type="text"
-                id="name"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+              <FormField
+                control={form.control}
                 name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="col-span-3"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Expert name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
-              </Label>
-              <Input
-                type="email"
-                id="email"
+              <FormField
+                control={form.control}
                 name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="col-span-3"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="expert@example.com" type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="specialization" className="text-right">
-                Specialization
-              </Label>
-              <Input
-                type="text"
-                id="specialization"
+              <FormField
+                control={form.control}
                 name="specialization"
-                value={formData.specialization}
-                onChange={handleInputChange}
-                className="col-span-3"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Specialization</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Expert specialization" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="experience" className="text-right">
-                Experience
-              </Label>
-              <Textarea
-                id="experience"
+              <FormField
+                control={form.control}
                 name="experience"
-                value={formData.experience}
-                onChange={handleInputChange}
-                className="col-span-3"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Experience</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Years of experience" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="secondary" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={() => handleSave(formData)}>
-              {selectedItem ? "Update Expert" : "Add Expert"}
-            </Button>
-          </DialogFooter>
+              <div className="flex justify-end space-x-2">
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button type="submit">
+                  {selectedItem ? "Update Expert" : "Add Expert"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
@@ -213,3 +246,4 @@ const Experts = () => {
 };
 
 export default Experts;
+
