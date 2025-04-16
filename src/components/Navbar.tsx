@@ -1,4 +1,3 @@
-
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { User, LogOut, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { label: 'Projects', path: '/' },
@@ -19,15 +19,18 @@ export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { logout } = useAuth();
   const isProjectDetail = location.pathname.startsWith('/project/');
+  const isLoginPage = location.pathname === '/login';
   
-  if (isProjectDetail) {
-    return null; // Hide navbar when inside a project
+  if (isLoginPage || isProjectDetail) {
+    return null;
   }
-  
+
   const handleSignout = () => {
+    logout();
     toast.success('Signed out successfully');
-    navigate('/');
+    navigate('/login');
   };
 
   const NavContent = () => (

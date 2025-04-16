@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Mail, Lock, Loader2 } from "lucide-react";
 import { loginUser } from "@/services/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -29,6 +31,7 @@ const Login = () => {
     
     try {
       await loginUser(formData);
+      login(); // Set authenticated state
       toast.success("Successfully logged in!");
       navigate("/");
     } catch (error) {
