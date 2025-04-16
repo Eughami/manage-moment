@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DataTable } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
@@ -168,7 +169,7 @@ const Users = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
               <FormField
-                control={form.control("name")}
+                control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
@@ -181,7 +182,7 @@ const Users = () => {
                 )}
               />
               <FormField
-                control={form.control("email")}
+                control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
@@ -194,7 +195,7 @@ const Users = () => {
                 )}
               />
               <FormField
-                control={form.control("role")}
+                control={form.control}
                 name="role"
                 render={({ field }) => (
                   <FormItem>
@@ -207,7 +208,7 @@ const Users = () => {
                 )}
               />
               <FormField
-                control={form.control("status")}
+                control={form.control}
                 name="status"
                 render={({ field }) => (
                   <FormItem>
