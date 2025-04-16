@@ -1,15 +1,28 @@
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { DataTable } from '@/components/DataTable';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Plus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 import { toast } from 'sonner';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 
 interface Beneficiary {
   id: string;
@@ -19,141 +32,140 @@ interface Beneficiary {
   location: string;
 }
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  phone: z.string().min(10, { message: 'Phone number must be at least 10 characters.' }),
-  location: z.string().min(2, { message: 'Location must be at least 2 characters.' })
-});
+const defaultFormData: Omit<Beneficiary, 'id'> = {
+  name: '',
+  email: '',
+  phone: '',
+  location: ''
+};
 
-const initialData: Beneficiary[] = [
-  { id: '1', name: 'John Smith', email: 'john@example.com', phone: '123-456-7890', location: 'New York, NY' },
-  { id: '2', name: 'Sarah Johnson', email: 'sarah@example.com', phone: '234-567-8901', location: 'Chicago, IL' },
-  { id: '3', name: 'Michael Brown', email: 'michael@example.com', phone: '345-678-9012', location: 'Los Angeles, CA' }
-];
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Invalid email address.",
+  }),
+  phone: z.string().min(10, {
+    message: "Phone number must be at least 10 characters.",
+  }),
+  location: z.string().min(2, {
+    message: "Location must be at least 2 characters.",
+  }),
+})
 
 const Beneficiaries = () => {
-  const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>(initialData);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentBeneficiary, setCurrentBeneficiary] = useState<Beneficiary | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  
+  const [items, setItems] = useState<Beneficiary[]>([
+    {
+      id: "beneficiary-1",
+      name: "John Doe",
+      email: "john.doe@example.com",
+      phone: "123-456-7890",
+      location: "New York"
+    },
+    {
+      id: "beneficiary-2",
+      name: "Jane Smith",
+      email: "jane.smith@example.com",
+      phone: "987-654-3210",
+      location: "Los Angeles"
+    }
+  ]);
+  const [selectedItem, setSelectedItem] = useState<Beneficiary | null>(null);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      location: ''
-    }
-  });
+    defaultValues: defaultFormData,
+    mode: "onChange"
+  })
 
   const columns = [
     {
-      id: 'name',
-      header: 'Name',
-      cell: (beneficiary: Beneficiary) => beneficiary.name
+      id: "name",
+      header: "Name",
+      cell: (item: Beneficiary) => item.name,
     },
     {
-      id: 'email',
-      header: 'Email',
-      cell: (beneficiary: Beneficiary) => beneficiary.email
+      id: "email",
+      header: "Email",
+      cell: (item: Beneficiary) => item.email,
     },
     {
-      id: 'phone',
-      header: 'Phone',
-      cell: (beneficiary: Beneficiary) => beneficiary.phone
+      id: "phone",
+      header: "Phone",
+      cell: (item: Beneficiary) => item.phone,
     },
     {
-      id: 'location',
-      header: 'Location',
-      cell: (beneficiary: Beneficiary) => beneficiary.location
-    }
+      id: "location",
+      header: "Location",
+      cell: (item: Beneficiary) => item.location,
+    },
   ];
 
-  const handleAddNew = () => {
-    setIsEditing(false);
-    setCurrentBeneficiary(null);
-    form.reset({
-      name: '',
-      email: '',
-      phone: '',
-      location: ''
-    });
+  const onAddNew = () => {
+    setSelectedItem(null);
+    form.reset(defaultFormData);
     setIsDialogOpen(true);
   };
 
-  const handleView = (beneficiary: Beneficiary) => {
-    setIsEditing(true);
-    setCurrentBeneficiary(beneficiary);
-    form.reset({
-      name: beneficiary.name,
-      email: beneficiary.email,
-      phone: beneficiary.phone,
-      location: beneficiary.location
-    });
+  const onView = (item: Beneficiary) => {
+    setSelectedItem(item);
+    form.reset(item);
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (beneficiary: Beneficiary) => {
-    setCurrentBeneficiary(beneficiary);
-    setIsDeleteDialogOpen(true);
+  const onDelete = (item: Beneficiary) => {
+    setItems(items.filter((i) => i.id !== item.id));
+    toast.success("Beneficiary deleted successfully");
   };
 
-  const confirmDelete = () => {
-    if (currentBeneficiary) {
-      setBeneficiaries(beneficiaries.filter(b => b.id !== currentBeneficiary.id));
-      toast.success('Beneficiary deleted successfully');
-      setIsDeleteDialogOpen(false);
+  const handleSave = (formData: Partial<Beneficiary>) => {
+    if (!formData.name || !formData.email || !formData.phone || !formData.location) {
+      toast.error("All fields are required");
+      return;
     }
-  };
-
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    if (isEditing && currentBeneficiary) {
-      // Update existing beneficiary
-      const updatedBeneficiaries = beneficiaries.map(b => 
-        b.id === currentBeneficiary.id 
-          ? { ...b, ...values } 
-          : b
+    
+    if (selectedItem) {
+      const updatedData = items.map(item =>
+        item.id === selectedItem.id ? { ...item, ...formData } : item
       );
-      setBeneficiaries(updatedBeneficiaries);
-      toast.success('Beneficiary updated successfully');
+      setItems(updatedData);
+      toast.success("Beneficiary updated successfully");
     } else {
-      // Add new beneficiary
-      const newBeneficiary: Beneficiary = {
-        id: `${Date.now()}`,
-        ...values
+      const newItem: Beneficiary = {
+        id: `beneficiary-${items.length + 1}`,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        location: formData.location
       };
-      setBeneficiaries([...beneficiaries, newBeneficiary]);
-      toast.success('Beneficiary added successfully');
+      setItems([...items, newItem]);
+      toast.success("Beneficiary added successfully");
     }
     setIsDialogOpen(false);
   };
 
   return (
-    <div className="container py-10">
+    <div className="page-container">
       <DataTable
-        data={beneficiaries}
+        data={items}
         columns={columns}
-        onAddNew={handleAddNew}
-        onView={handleView}
-        onDelete={handleDelete}
+        onAddNew={onAddNew}
+        onView={onView}
+        onDelete={onDelete}
         title="Beneficiaries"
       />
-
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{isEditing ? 'Edit Beneficiary' : 'Add New Beneficiary'}</DialogTitle>
+            <DialogTitle>{selectedItem ? "View/Edit Beneficiary" : "Add New Beneficiary"}</DialogTitle>
             <DialogDescription>
-              {isEditing 
-                ? 'Edit the beneficiary details below.' 
-                : 'Enter the beneficiary details below to add them to the system.'}
+              {selectedItem ? "View or edit beneficiary details." : "Create a new beneficiary."}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -161,13 +173,12 @@ const Beneficiaries = () => {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter name" {...field} />
+                      <Input placeholder="Beneficiary name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="email"
@@ -175,13 +186,12 @@ const Beneficiaries = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter email" type="email" {...field} />
+                      <Input placeholder="john.doe@example.com" type="email" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="phone"
@@ -189,13 +199,12 @@ const Beneficiaries = () => {
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter phone number" {...field} />
+                      <Input placeholder="123-456-7890" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="location"
@@ -203,28 +212,19 @@ const Beneficiaries = () => {
                   <FormItem>
                     <FormLabel>Location</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter location" {...field} />
+                      <Input placeholder="New York" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <DialogFooter>
-                <Button type="submit">{isEditing ? 'Update' : 'Add'} Beneficiary</Button>
-              </DialogFooter>
+              <div className="flex justify-end">
+                <Button type="submit">Save</Button>
+              </div>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
-
-      <DeleteConfirmDialog
-        open={isDeleteDialogOpen}
-        setOpen={setIsDeleteDialogOpen}
-        onConfirm={confirmDelete}
-        title="Delete Beneficiary"
-        description={`Are you sure you want to delete ${currentBeneficiary?.name}? This action cannot be undone.`}
-      />
     </div>
   );
 };

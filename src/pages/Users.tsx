@@ -1,252 +1,245 @@
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { DataTable } from '@/components/DataTable';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Plus, Pencil, Trash } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
 import { toast } from 'sonner';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 
 interface User {
   id: string;
   name: string;
-  email: string;
   role: string;
+  email: string;
   status: string;
 }
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  role: z.string({ required_error: 'Please select a role.' }),
-  status: z.string({ required_error: 'Please select a status.' }),
-});
+const defaultFormData: Omit<User, 'id'> = {
+  name: '',
+  role: '',
+  email: '',
+  status: ''
+};
 
-const initialData: User[] = [
-  { id: '1', name: 'Admin User', email: 'admin@example.com', role: 'Admin', status: 'Active' },
-  { id: '2', name: 'Project Manager', email: 'manager@example.com', role: 'Manager', status: 'Active' },
-  { id: '3', name: 'Viewer Account', email: 'viewer@example.com', role: 'Viewer', status: 'Inactive' }
-];
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Invalid email address.",
+  }),
+  role: z.string().min(2, {
+    message: "Role must be at least 2 characters.",
+  }),
+  status: z.string().min(2, {
+    message: "Status must be at least 2 characters.",
+  }),
+})
 
 const Users = () => {
-  const [users, setUsers] = useState<User[]>(initialData);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  
+  const [items, setItems] = useState<User[]>([
+    {
+      id: 'user-1',
+      name: 'John Doe',
+      role: 'Admin',
+      email: 'john.doe@example.com',
+      status: 'Active',
+    },
+    {
+      id: 'user-2',
+      name: 'Jane Smith',
+      role: 'Editor',
+      email: 'jane.smith@example.com',
+      status: 'Inactive',
+    },
+  ]);
+  const [selectedItem, setSelectedItem] = useState<User | null>(null);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      role: '',
-      status: ''
-    }
-  });
+    defaultValues: defaultFormData,
+  })
 
   const columns = [
     {
       id: 'name',
       header: 'Name',
-      cell: (user: User) => user.name
-    },
-    {
-      id: 'email',
-      header: 'Email',
-      cell: (user: User) => user.email
+      cell: (item: User) => item.name,
     },
     {
       id: 'role',
       header: 'Role',
-      cell: (user: User) => user.role
+      cell: (item: User) => item.role,
+    },
+    {
+      id: 'email',
+      header: 'Email',
+      cell: (item: User) => item.email,
     },
     {
       id: 'status',
       header: 'Status',
-      cell: (user: User) => (
-        <span className={user.status === 'Active' ? 'text-green-500' : 'text-red-500'}>
-          {user.status}
-        </span>
-      )
-    }
+      cell: (item: User) => item.status,
+    },
   ];
 
-  const handleAddNew = () => {
-    setIsEditing(false);
-    setCurrentUser(null);
-    form.reset({
-      name: '',
-      email: '',
-      role: '',
-      status: ''
-    });
+  const onAddNew = () => {
+    setSelectedItem(null);
+    form.reset(defaultFormData);
     setIsDialogOpen(true);
   };
 
-  const handleView = (user: User) => {
-    setIsEditing(true);
-    setCurrentUser(user);
-    form.reset({
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      status: user.status
-    });
+  const onView = (item: User) => {
+    setSelectedItem(item);
+    form.reset(item);
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (user: User) => {
-    setCurrentUser(user);
-    setIsDeleteDialogOpen(true);
+  const onDelete = (item: User) => {
+    setItems(items.filter((i) => i.id !== item.id));
+    toast.success('User deleted successfully');
   };
 
-  const confirmDelete = () => {
-    if (currentUser) {
-      setUsers(users.filter(u => u.id !== currentUser.id));
-      toast.success('User deleted successfully');
-      setIsDeleteDialogOpen(false);
+  const handleSave = (formData: Partial<User>) => {
+    if (!formData.name || !formData.email || !formData.role || !formData.status) {
+      toast.error("All fields are required");
+      return;
     }
-  };
-
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    if (isEditing && currentUser) {
-      // Update existing user
-      const updatedUsers = users.map(u => 
-        u.id === currentUser.id 
-          ? { ...u, ...values } 
-          : u
+    
+    if (selectedItem) {
+      const updatedData = items.map(item =>
+        item.id === selectedItem.id ? { ...item, ...formData } : item
       );
-      setUsers(updatedUsers);
-      toast.success('User updated successfully');
+      setItems(updatedData);
+      toast.success("User updated successfully");
     } else {
-      // Add new user
-      const newUser: User = {
-        id: `${Date.now()}`,
-        ...values
+      const newItem: User = {
+        id: `user-${items.length + 1}`,
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        status: formData.status
       };
-      setUsers([...users, newUser]);
-      toast.success('User added successfully');
+      setItems([...items, newItem]);
+      toast.success("User added successfully");
     }
     setIsDialogOpen(false);
   };
 
   return (
-    <div className="container py-10">
+    <div className="page-container">
       <DataTable
-        data={users}
-        columns={columns}
-        onAddNew={handleAddNew}
-        onView={handleView}
-        onDelete={handleDelete}
         title="Users"
+        columns={columns}
+        data={items}
+        onAddNew={onAddNew}
+        onView={onView}
+        onDelete={onDelete}
       />
-
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{isEditing ? 'Edit User' : 'Add New User'}</DialogTitle>
+            <DialogTitle>{selectedItem ? 'Edit User' : 'Create User'}</DialogTitle>
             <DialogDescription>
-              {isEditing 
-                ? 'Edit the user details below.' 
-                : 'Enter the user details below to add them to the system.'}
+              {selectedItem ? 'Update user details.' : 'Add a new user to the list.'}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
               <FormField
-                control={form.control}
+                control={form.control("name")}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter name" {...field} />
+                      <Input placeholder="User name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
-                control={form.control}
+                control={form.control("email")}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter email" type="email" {...field} />
+                      <Input placeholder="user@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
-                control={form.control}
+                control={form.control("role")}
                 name="role"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Admin">Admin</SelectItem>
-                        <SelectItem value="Manager">Manager</SelectItem>
-                        <SelectItem value="Viewer">Viewer</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input placeholder="User role" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
-                control={form.control}
+                control={form.control("status")}
                 name="status"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
+                    <FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a status" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Inactive">Inactive</SelectItem>
+                          <SelectItem value="Pending">Pending</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <DialogFooter>
-                <Button type="submit">{isEditing ? 'Update' : 'Add'} User</Button>
-              </DialogFooter>
+              <div className="flex justify-end">
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button type="submit">Save</Button>
+              </div>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
-
-      <DeleteConfirmDialog
-        open={isDeleteDialogOpen}
-        setOpen={setIsDeleteDialogOpen}
-        onConfirm={confirmDelete}
-        title="Delete User"
-        description={`Are you sure you want to delete ${currentUser?.name}? This action cannot be undone.`}
-      />
     </div>
   );
 };
