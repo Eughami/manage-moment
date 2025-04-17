@@ -1,6 +1,10 @@
 import fetch from '@/lib/baseAxios';
-import { CreateUser } from './api';
-
+export interface CreateUser {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+}
 export const getUsers = async () => {
   const res = await fetch({
     url: 'users',

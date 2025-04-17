@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { DataTable } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
 import {
@@ -32,8 +30,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createUser, deleteUser, getUsers, updateUser } from '@/services/users';
-import { CreateUser } from '@/services/api';
+import {
+  CreateUser,
+  createUser,
+  deleteUser,
+  getUsers,
+  updateUser,
+} from '@/services/users';
 import { Eye, EyeOff } from 'lucide-react';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { Loader2 } from 'lucide-react';

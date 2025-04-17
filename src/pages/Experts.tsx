@@ -1,16 +1,15 @@
-
 import React, { useState } from 'react';
 import { DataTable } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogClose 
-} from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -18,96 +17,116 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { toast } from 'sonner';
+import {
+  getExperts,
+  createExpert,
+  updateExpert,
+  deleteExpert,
+  CreateExpert,
+} from '@/services/experts';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
+import { Loader2 } from 'lucide-react';
 
 interface Expert {
   id: string;
-  name: string;
-  email: string;
-  specialization: string;
-  experience: string;
+  nom: string;
+  specialite: string;
+  tel: string;
 }
 
 const defaultFormData: Omit<Expert, 'id'> = {
-  name: '',
-  email: '',
-  specialization: '',
-  experience: ''
+  nom: '',
+  specialite: '',
+  tel: '',
 };
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
+  nom: z.string().min(2, {
+    message: 'Nom must be at least 2 characters.',
   }),
-  email: z.string().email({
-    message: "Invalid email address.",
+  specialite: z.string().min(2, {
+    message: 'Specialite must be at least 2 characters.',
   }),
-  specialization: z.string().min(2, {
-    message: "Specialization must be at least 2 characters.",
+  tel: z.string().min(2, {
+    message: 'Telephone must be at least 8 characters.',
   }),
-  experience: z.string().min(2, {
-    message: "Experience must be at least 2 characters.",
-  }),
-})
+});
 
 const Experts = () => {
-  const [items, setItems] = useState<Expert[]>([
-    {
-      id: "expert-1",
-      name: "Dr. Jane Doe",
-      email: "jane.doe@example.com",
-      specialization: "Artificial Intelligence",
-      experience: "10 years"
-    },
-    {
-      id: "expert-2",
-      name: "Prof. John Smith",
-      email: "john.smith@example.com",
-      specialization: "Biotechnology",
-      experience: "15 years"
-    },
-    {
-      id: "expert-3",
-      name: "Emily White",
-      email: "emily.white@example.com",
-      specialization: "Renewable Energy",
-      experience: "8 years"
-    }
-  ]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Expert | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [expertToDelete, setExpertToDelete] = useState<Expert | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultFormData,
-    mode: "onChange"
-  })
+    mode: 'onChange',
+  });
+
+  const {
+    isLoading,
+    isFetching,
+    data: experts,
+    refetch,
+  } = useQuery({
+    queryKey: ['experts'],
+    queryFn: getExperts,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: createExpert,
+    onSuccess: () => {
+      refetch();
+      toast.success('Expert added successfully');
+      setIsDialogOpen(false);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateExpert,
+    onSuccess: () => {
+      refetch();
+      toast.success('Expert updated successfully');
+      setIsDialogOpen(false);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteExpert,
+    onSuccess: () => {
+      refetch();
+      toast.success('Expert deleted successfully');
+      setExpertToDelete(null);
+      setDeleteDialogOpen(false);
+    },
+  });
 
   const columns = [
     {
-      id: "name",
-      header: "Name",
-      cell: (item: Expert) => item.name,
+      id: 'nom',
+      header: 'Name',
+      cell: (item: Expert) => item.nom,
     },
     {
-      id: "email",
-      header: "Email",
-      cell: (item: Expert) => item.email,
+      id: 'specialite',
+      header: 'Specialite',
+      cell: (item: Expert) => item.specialite,
     },
     {
-      id: "specialization",
-      header: "Specialization",
-      cell: (item: Expert) => item.specialization,
-    },
-    {
-      id: "experience",
-      header: "Experience",
-      cell: (item: Expert) => item.experience,
+      id: 'tel',
+      header: 'Tel',
+      cell: (item: Expert) => item.tel,
     },
   ];
 
@@ -124,34 +143,32 @@ const Experts = () => {
   };
 
   const handleDelete = (item: Expert) => {
-    setItems(items.filter((i) => i.id !== item.id));
-    toast.success("Expert deleted successfully");
+    setExpertToDelete(item);
+    setDeleteDialogOpen(true);
   };
 
-  const handleSave = (formData: Partial<Expert>) => {
-    if (!formData.name || !formData.email || !formData.specialization || !formData.experience) {
-      toast.error("All fields are required");
+  const handleConfirmDelete = () => {
+    if (expertToDelete) {
+      deleteMutation.mutate(expertToDelete.id);
+    }
+  };
+
+  const handleSave = (formData: CreateExpert) => {
+    if (!formData.nom || !formData.specialite || !formData.tel) {
+      toast.error('All fields are required');
       return;
     }
-    
+
     if (selectedItem) {
-      const updatedData = items.map(item =>
-        item.id === selectedItem.id ? { ...item, ...formData } : item
-      );
-      setItems(updatedData);
-      toast.success("Expert updated successfully");
+      updateMutation.mutate({ id: selectedItem.id, payload: formData });
     } else {
-      const newItem: Expert = {
-        id: `expert-${items.length + 1}`,
-        name: formData.name,
-        email: formData.email,
-        specialization: formData.specialization,
-        experience: formData.experience
+      const newItem: CreateExpert = {
+        nom: formData.nom,
+        specialite: formData.specialite,
+        tel: formData.tel,
       };
-      setItems([...items, newItem]);
-      toast.success("Expert added successfully");
+      createMutation.mutate(newItem);
     }
-    setIsDialogOpen(false);
   };
 
   return (
@@ -159,30 +176,43 @@ const Experts = () => {
       <DataTable
         title="Experts"
         columns={columns}
-        data={items}
+        data={experts?.data || []}
         onAddNew={handleAddNew}
         onView={handleView}
         onDelete={handleDelete}
+        loading={isLoading || isFetching}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
+          {(createMutation.isPending || updateMutation.isPending) && (
+            <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-md">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
           <DialogHeader>
-            <DialogTitle>{selectedItem ? "View/Edit Expert" : "Add New Expert"}</DialogTitle>
+            <DialogTitle>
+              {selectedItem ? 'View/Edit Expert' : 'Add New Expert'}
+            </DialogTitle>
             <DialogDescription>
-              {selectedItem ? "Update expert details." : "Add a new expert to the list."}
+              {selectedItem
+                ? 'Update expert details.'
+                : 'Add a new expert to the list.'}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSave)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
-                name="name"
+                name="nom"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Nom</FormLabel>
                     <FormControl>
-                      <Input placeholder="Expert name" {...field} />
+                      <Input placeholder="Expert nom" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -190,12 +220,12 @@ const Experts = () => {
               />
               <FormField
                 control={form.control}
-                name="email"
+                name="specialite"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Specialite</FormLabel>
                     <FormControl>
-                      <Input placeholder="expert@example.com" type="email" {...field} />
+                      <Input placeholder="Specialite" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -203,30 +233,18 @@ const Experts = () => {
               />
               <FormField
                 control={form.control}
-                name="specialization"
+                name="tel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Specialization</FormLabel>
+                    <FormLabel>Tel</FormLabel>
                     <FormControl>
-                      <Input placeholder="Expert specialization" {...field} />
+                      <Input placeholder="77 .. .. .. " {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="experience"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Experience</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Years of experience" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
               <div className="flex justify-end space-x-2">
                 <DialogClose asChild>
                   <Button type="button" variant="secondary">
@@ -234,16 +252,23 @@ const Experts = () => {
                   </Button>
                 </DialogClose>
                 <Button type="submit">
-                  {selectedItem ? "Update Expert" : "Add Expert"}
+                  {selectedItem ? 'Update Expert' : 'Add Expert'}
                 </Button>
               </div>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        setOpen={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title={`Delete ${expertToDelete?.nom}`}
+        isLoading={deleteMutation.isPending}
+        description="Are you sure you want to delete this expert? This action cannot be undone."
+      />
     </div>
   );
 };
 
 export default Experts;
-
