@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -17,89 +17,117 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+import {
+  createBeneficiary,
+  updateBeneficiary,
+  deleteBeneficiary,
+  CreateBeneficiary,
+  getBeneficiariess,
+} from '@/services/beneficiaries';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 
 interface Beneficiary {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
+  nom: string;
+  address: string;
+  tel: string;
 }
 
 const defaultFormData: Omit<Beneficiary, 'id'> = {
-  name: '',
-  email: '',
-  phone: '',
-  location: ''
+  nom: '',
+  address: '',
+  tel: '',
 };
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
+  nom: z.string().min(2, {
+    message: 'Nom must be at least 2 characters.',
   }),
-  email: z.string().email({
-    message: "Invalid email address.",
+  address: z.string().min(10, {
+    message: 'Address number must be at least 10 characters.',
   }),
-  phone: z.string().min(10, {
-    message: "Phone number must be at least 10 characters.",
+  tel: z.string().min(2, {
+    message: 'Tel must be at least 8 characters.',
   }),
-  location: z.string().min(2, {
-    message: "Location must be at least 2 characters.",
-  }),
-})
+});
 
 const Beneficiaries = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [items, setItems] = useState<Beneficiary[]>([
-    {
-      id: "beneficiary-1",
-      name: "John Doe",
-      email: "john.doe@example.com",
-      phone: "123-456-7890",
-      location: "New York"
-    },
-    {
-      id: "beneficiary-2",
-      name: "Jane Smith",
-      email: "jane.smith@example.com",
-      phone: "987-654-3210",
-      location: "Los Angeles"
-    }
-  ]);
   const [selectedItem, setSelectedItem] = useState<Beneficiary | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [benficiaryToDelete, setBeneficiaryToDelete] =
+    useState<Beneficiary | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultFormData,
-    mode: "onChange"
-  })
+    mode: 'onChange',
+  });
+
+  const {
+    isLoading,
+    isFetching,
+    data: beneficiairies,
+    refetch,
+  } = useQuery({
+    queryKey: ['beneficiairies'],
+    queryFn: getBeneficiariess,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: createBeneficiary,
+    onSuccess: () => {
+      refetch();
+      toast.success('Beneficiary added successfully');
+      setIsDialogOpen(false);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateBeneficiary,
+    onSuccess: () => {
+      refetch();
+      toast.success('Beneficiary updated successfully');
+      setIsDialogOpen(false);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteBeneficiary,
+    onSuccess: () => {
+      refetch();
+      toast.success('Beneficiary deleted successfully');
+      setBeneficiaryToDelete(null);
+      setDeleteDialogOpen(false);
+    },
+  });
 
   const columns = [
     {
-      id: "name",
-      header: "Name",
-      cell: (item: Beneficiary) => item.name,
+      id: 'nom',
+      header: 'Nom',
+      cell: (item: Beneficiary) => item.nom,
     },
     {
-      id: "email",
-      header: "Email",
-      cell: (item: Beneficiary) => item.email,
+      id: 'address',
+      header: 'Address',
+      cell: (item: Beneficiary) => item.address,
     },
     {
-      id: "phone",
-      header: "Phone",
-      cell: (item: Beneficiary) => item.phone,
-    },
-    {
-      id: "location",
-      header: "Location",
-      cell: (item: Beneficiary) => item.location,
+      id: 'tel',
+      header: 'Tel',
+      cell: (item: Beneficiary) => item.tel,
     },
   ];
 
@@ -116,64 +144,87 @@ const Beneficiaries = () => {
   };
 
   const onDelete = (item: Beneficiary) => {
-    setItems(items.filter((i) => i.id !== item.id));
-    toast.success("Beneficiary deleted successfully");
+    setBeneficiaryToDelete(item);
+    setDeleteDialogOpen(true);
+  };
+  const handleConfirmDelete = () => {
+    if (benficiaryToDelete) {
+      deleteMutation.mutate(benficiaryToDelete.id);
+    }
   };
 
-  const handleSave = (formData: Partial<Beneficiary>) => {
-    if (!formData.name || !formData.email || !formData.phone || !formData.location) {
-      toast.error("All fields are required");
+  const handleSave = (formData: CreateBeneficiary) => {
+    if (!formData.nom || !formData.address || !formData.tel) {
+      toast.error('All fields are required');
       return;
     }
-    
+
     if (selectedItem) {
-      const updatedData = items.map(item =>
-        item.id === selectedItem.id ? { ...item, ...formData } : item
-      );
-      setItems(updatedData);
-      toast.success("Beneficiary updated successfully");
+      updateMutation.mutate({ id: selectedItem.id, payload: formData });
     } else {
-      const newItem: Beneficiary = {
-        id: `beneficiary-${items.length + 1}`,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        location: formData.location
+      const newItem: CreateBeneficiary = {
+        nom: formData.nom,
+        address: formData.address,
+        tel: formData.tel,
       };
-      setItems([...items, newItem]);
-      toast.success("Beneficiary added successfully");
+      createMutation.mutate(newItem);
     }
-    setIsDialogOpen(false);
   };
 
   return (
     <div className="page-container">
       <DataTable
-        data={items}
+        data={beneficiairies?.data || []}
         columns={columns}
         onAddNew={onAddNew}
         onView={onView}
         onDelete={onDelete}
         title="Beneficiaries"
+        loading={isFetching || isLoading}
       />
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
+          {(createMutation.isPending || updateMutation.isPending) && (
+            <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-md">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
           <DialogHeader>
-            <DialogTitle>{selectedItem ? "View/Edit Beneficiary" : "Add New Beneficiary"}</DialogTitle>
+            <DialogTitle>
+              {selectedItem ? 'View/Edit Beneficiary' : 'Add New Beneficiary'}
+            </DialogTitle>
             <DialogDescription>
-              {selectedItem ? "View or edit beneficiary details." : "Create a new beneficiary."}
+              {selectedItem
+                ? 'View or edit beneficiary details.'
+                : 'Create a new beneficiary.'}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSave)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
-                name="name"
+                name="nom"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Nom</FormLabel>
                     <FormControl>
-                      <Input placeholder="Beneficiary name" {...field} />
+                      <Input placeholder="Beneficiary nom" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />{' '}
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Beneficiary address" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -181,38 +232,12 @@ const Beneficiaries = () => {
               />
               <FormField
                 control={form.control}
-                name="email"
+                name="tel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Tel</FormLabel>
                     <FormControl>
-                      <Input placeholder="john.doe@example.com" type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="123-456-7890" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Location</FormLabel>
-                    <FormControl>
-                      <Input placeholder="New York" {...field} />
+                      <Input placeholder="77....." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -225,6 +250,14 @@ const Beneficiaries = () => {
           </Form>
         </DialogContent>
       </Dialog>
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        setOpen={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title={`Delete ${benficiaryToDelete?.nom}`}
+        isLoading={deleteMutation.isPending}
+        description="Are you sure you want to delete this beneficiary? This action cannot be undone."
+      />
     </div>
   );
 };
