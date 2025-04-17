@@ -1,18 +1,26 @@
+import { PUBLIC_REQUEST_KEY } from '@/constants/auth';
+import fetch from '@/lib/baseAxios';
 
 export interface LoginCredentials {
   email: string;
   password: string;
 }
 
-// Simulated API call
-export const loginUser = async (credentials: LoginCredentials): Promise<{ success: boolean }> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // For demo purposes, accept any non-empty email/password
-  if (credentials.email && credentials.password) {
-    return { success: true };
-  }
-  
-  throw new Error('Invalid credentials');
+export interface LoginResponse {
+  id: string;
+  email: string;
+  accessToken: string;
+}
+
+export const loginFunc = async (payload: LoginCredentials) => {
+  const res = await fetch({
+    url: 'auth/login',
+    method: 'POST',
+    headers: {
+      [PUBLIC_REQUEST_KEY]: 'true',
+    },
+    data: payload,
+  });
+
+  return res;
 };

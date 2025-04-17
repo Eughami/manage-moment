@@ -1,15 +1,15 @@
-
-import * as React from "react";
-import { 
-  Table, 
-  TableHeader, 
-  TableRow, 
-  TableHead, 
-  TableBody, 
-  TableCell 
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Plus, Eye, Trash } from "lucide-react";
+import * as React from 'react';
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Plus, Eye, Trash } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface DataTableProps<T> {
   data: T[];
@@ -22,6 +22,7 @@ interface DataTableProps<T> {
   onView?: (item: T) => void;
   onDelete?: (item: T) => void;
   title: string;
+  loading?: boolean;
 }
 
 export function DataTable<T extends { id: string }>({
@@ -30,7 +31,8 @@ export function DataTable<T extends { id: string }>({
   onAddNew,
   onView,
   onDelete,
-  title
+  title,
+  loading,
 }: DataTableProps<T>) {
   return (
     <div className="w-full">
@@ -53,10 +55,18 @@ export function DataTable<T extends { id: string }>({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={columns.length}>
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
               <TableRow>
-                <TableCell 
-                  colSpan={columns.length + ((onView || onDelete) ? 1 : 0)} 
+                <TableCell
+                  colSpan={columns.length + (onView || onDelete ? 1 : 0)}
                   className="h-24 text-center"
                 >
                   No data available

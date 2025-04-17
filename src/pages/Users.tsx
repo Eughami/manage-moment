@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DataTable } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
 import { Plus, Pencil, Trash } from 'lucide-react';
@@ -11,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -19,73 +18,117 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { createUser, deleteUser, getUsers, updateUser } from '@/services/users';
+import { CreateUser } from '@/services/api';
+import { Eye, EyeOff } from 'lucide-react';
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
+import { Loader2 } from 'lucide-react';
 
 interface User {
   id: string;
   name: string;
   role: string;
   email: string;
-  status: string;
+  password: string;
 }
 
 const defaultFormData: Omit<User, 'id'> = {
   name: '',
   role: '',
   email: '',
-  status: ''
+  password: '',
 };
-
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Invalid email address.",
-  }),
-  role: z.string().min(2, {
-    message: "Role must be at least 2 characters.",
-  }),
-  status: z.string().min(2, {
-    message: "Status must be at least 2 characters.",
-  }),
-})
 
 const Users = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [items, setItems] = useState<User[]>([
-    {
-      id: 'user-1',
-      name: 'John Doe',
-      role: 'Admin',
-      email: 'john.doe@example.com',
-      status: 'Active',
-    },
-    {
-      id: 'user-2',
-      name: 'Jane Smith',
-      role: 'Editor',
-      email: 'jane.smith@example.com',
-      status: 'Inactive',
-    },
-  ]);
   const [selectedItem, setSelectedItem] = useState<User | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const isEditMode = !!selectedItem;
+
+  const dynamicSchema = z.object({
+    name: z.string().min(2, {
+      message: 'Name must be at least 2 characters.',
+    }),
+    email: z.string().email({
+      message: 'Invalid email address.',
+    }),
+    role: z.string().min(2, {
+      message: 'Role must be at least 2 characters.',
+    }),
+    password: isEditMode
+      ? z.string().optional()
+      : z.string().min(4, {
+          message: 'Password must be at least 4 characters',
+        }),
+  });
+
+  const {
+    isLoading,
+    isFetching,
+    data: users,
+    refetch,
+  } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: createUser,
+    onSuccess: () => {
+      refetch();
+      toast.success('User added successfully');
+      setIsDialogOpen(false);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateUser,
+    onSuccess: () => {
+      refetch();
+      toast.success('User updated successfully');
+      setIsDialogOpen(false);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      refetch();
+      toast.success('User deleted successfully');
+      setUserToDelete(null);
+      setDeleteDialogOpen(false);
+    },
+  });
+
+  const form = useForm<z.infer<typeof dynamicSchema>>({
+    resolver: zodResolver(dynamicSchema),
     defaultValues: defaultFormData,
-  })
+  });
 
   const columns = [
     {
       id: 'name',
-      header: 'Name',
+      header: 'Nom',
       cell: (item: User) => item.name,
     },
     {
@@ -97,11 +140,6 @@ const Users = () => {
       id: 'email',
       header: 'Email',
       cell: (item: User) => item.email,
-    },
-    {
-      id: 'status',
-      header: 'Status',
-      cell: (item: User) => item.status,
     },
   ];
 
@@ -118,34 +156,38 @@ const Users = () => {
   };
 
   const onDelete = (item: User) => {
-    setItems(items.filter((i) => i.id !== item.id));
-    toast.success('User deleted successfully');
+    setUserToDelete(item);
+    setDeleteDialogOpen(true);
   };
 
-  const handleSave = (formData: Partial<User>) => {
-    if (!formData.name || !formData.email || !formData.role || !formData.status) {
-      toast.error("All fields are required");
+  const handleConfirmDelete = () => {
+    if (userToDelete) {
+      deleteMutation.mutate(userToDelete.id);
+    }
+  };
+
+  const handleSave = (formData: CreateUser) => {
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.role ||
+      (!formData.password && !selectedItem)
+    ) {
+      toast.error('All fields are required');
       return;
     }
-    
+
     if (selectedItem) {
-      const updatedData = items.map(item =>
-        item.id === selectedItem.id ? { ...item, ...formData } : item
-      );
-      setItems(updatedData);
-      toast.success("User updated successfully");
+      updateMutation.mutate({ id: selectedItem.id, payload: formData });
     } else {
-      const newItem: User = {
-        id: `user-${items.length + 1}`,
+      const newItem: CreateUser = {
         name: formData.name,
         email: formData.email,
         role: formData.role,
-        status: formData.status
+        password: formData.password,
       };
-      setItems([...items, newItem]);
-      toast.success("User added successfully");
+      createMutation.mutate(newItem);
     }
-    setIsDialogOpen(false);
   };
 
   return (
@@ -153,21 +195,34 @@ const Users = () => {
       <DataTable
         title="Users"
         columns={columns}
-        data={items}
+        data={users?.data || []}
         onAddNew={onAddNew}
         onView={onView}
         onDelete={onDelete}
+        loading={isLoading || isFetching}
       />
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
+          {(createMutation.isPending || updateMutation.isPending) && (
+            <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-md">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
           <DialogHeader>
-            <DialogTitle>{selectedItem ? 'Edit User' : 'Create User'}</DialogTitle>
+            <DialogTitle>
+              {selectedItem ? 'Edit User' : 'Create User'}
+            </DialogTitle>
             <DialogDescription>
-              {selectedItem ? 'Update user details.' : 'Add a new user to the list.'}
+              {selectedItem
+                ? 'Update user details.'
+                : 'Add a new user to the list.'}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSave)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="name"
@@ -194,6 +249,43 @@ const Users = () => {
                   </FormItem>
                 )}
               />
+
+              {!selectedItem && (
+                <FormField
+                  control={form.control}
+                  name="password"
+                  disabled={selectedItem ? true : false}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            {...field}
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="User Password"
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            tabIndex={-1} // avoid interfering with tab flow
+                          >
+                            {showPassword ? (
+                              <EyeOff size={18} />
+                            ) : (
+                              <Eye size={18} />
+                            )}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <FormField
                 control={form.control}
                 name="role"
@@ -201,27 +293,16 @@ const Users = () => {
                   <FormItem>
                     <FormLabel>Role</FormLabel>
                     <FormControl>
-                      <Input placeholder="User role" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a status" />
+                          <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="Inactive">Inactive</SelectItem>
-                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Admin">Admin</SelectItem>
+                          <SelectItem value="Viewer">Viewer</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -241,6 +322,14 @@ const Users = () => {
           </Form>
         </DialogContent>
       </Dialog>
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        setOpen={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title={`Delete ${userToDelete?.email}`}
+        isLoading={deleteMutation.isPending}
+        description="Are you sure you want to delete this user? This action cannot be undone."
+      />
     </div>
   );
 };

@@ -1,9 +1,8 @@
-
 // Types
-export type ProjectStatus = "active" | "completed" | "on-hold" | "cancelled";
-export type ProjectType = "development" | "design" | "marketing" | "research";
-export type TaskStatus = "todo" | "in-progress" | "review" | "done";
-export type Priority = "low" | "medium" | "high";
+export type ProjectStatus = 'active' | 'completed' | 'on-hold' | 'cancelled';
+export type ProjectType = 'development' | 'design' | 'marketing' | 'research';
+export type TaskStatus = 'todo' | 'in-progress' | 'review' | 'done';
+export type Priority = 'low' | 'medium' | 'high';
 
 export interface Project {
   id: string;
@@ -30,10 +29,17 @@ export interface Task {
 }
 
 export interface User {
-  id: string;
+  id?: string;
   name: string;
   email: string;
   avatar: string;
+}
+
+export interface CreateUser {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
 }
 
 export interface File {
@@ -51,38 +57,38 @@ export interface File {
 // Mock data
 const users: User[] = [
   {
-    id: "user-1",
-    name: "Alex Johnson",
-    email: "alex@example.com",
-    avatar: "https://i.pravatar.cc/150?img=1",
+    id: 'user-1',
+    name: 'Alex Johnson',
+    email: 'alex@example.com',
+    avatar: 'https://i.pravatar.cc/150?img=1',
   },
   {
-    id: "user-2",
-    name: "Jamie Smith",
-    email: "jamie@example.com",
-    avatar: "https://i.pravatar.cc/150?img=2",
+    id: 'user-2',
+    name: 'Jamie Smith',
+    email: 'jamie@example.com',
+    avatar: 'https://i.pravatar.cc/150?img=2',
   },
   {
-    id: "user-3",
-    name: "Taylor Wilson",
-    email: "taylor@example.com",
-    avatar: "https://i.pravatar.cc/150?img=3",
+    id: 'user-3',
+    name: 'Taylor Wilson',
+    email: 'taylor@example.com',
+    avatar: 'https://i.pravatar.cc/150?img=3',
   },
   {
-    id: "user-4",
-    name: "Morgan Lee",
-    email: "morgan@example.com",
-    avatar: "https://i.pravatar.cc/150?img=4",
+    id: 'user-4',
+    name: 'Morgan Lee',
+    email: 'morgan@example.com',
+    avatar: 'https://i.pravatar.cc/150?img=4',
   },
 ];
 
 // Generate mock projects data
 let mockProjects: Project[] = Array.from({ length: 10 }).map((_, index) => {
   const id = `project-${index + 1}`;
-  const type = ["development", "design", "marketing", "research"][
+  const type = ['development', 'design', 'marketing', 'research'][
     Math.floor(Math.random() * 4)
   ] as ProjectType;
-  const status = ["active", "completed", "on-hold", "cancelled"][
+  const status = ['active', 'completed', 'on-hold', 'cancelled'][
     Math.floor(Math.random() * 4)
   ] as ProjectStatus;
   const createdAt = new Date(
@@ -98,10 +104,10 @@ let mockProjects: Project[] = Array.from({ length: 10 }).map((_, index) => {
     (_, tIndex) => {
       const taskId = `task-${index}-${tIndex}`;
       const assignee = users[Math.floor(Math.random() * users.length)];
-      const taskStatus = ["todo", "in-progress", "review", "done"][
+      const taskStatus = ['todo', 'in-progress', 'review', 'done'][
         Math.floor(Math.random() * 4)
       ] as TaskStatus;
-      const priority = ["low", "medium", "high"][
+      const priority = ['low', 'medium', 'high'][
         Math.floor(Math.random() * 3)
       ] as Priority;
       const dueDate =
@@ -116,7 +122,9 @@ let mockProjects: Project[] = Array.from({ length: 10 }).map((_, index) => {
         id: taskId,
         projectId: id,
         title: `Task ${tIndex + 1} for Project ${index + 1}`,
-        description: `This is the description for task ${tIndex + 1} of project ${index + 1}.`,
+        description: `This is the description for task ${
+          tIndex + 1
+        } of project ${index + 1}.`,
         assignee,
         dueDate,
         status: taskStatus,
@@ -134,18 +142,18 @@ let mockProjects: Project[] = Array.from({ length: 10 }).map((_, index) => {
     (_, fIndex) => {
       const fileId = `file-${index}-${fIndex}`;
       const fileTypes = [
-        "image/jpeg",
-        "image/png",
-        "application/pdf",
-        "application/docx",
-        "text/plain",
+        'image/jpeg',
+        'image/png',
+        'application/pdf',
+        'application/docx',
+        'text/plain',
       ];
       const fileType = fileTypes[Math.floor(Math.random() * fileTypes.length)];
       const fileName = `File-${fIndex + 1}-${
-        ["Document", "Screenshot", "Report", "Mockup"][
+        ['Document', 'Screenshot', 'Report', 'Mockup'][
           Math.floor(Math.random() * 4)
         ]
-      }.${fileType.split("/")[1]}`;
+      }.${fileType.split('/')[1]}`;
       const fileSize = Math.floor(Math.random() * 5000) + 50; // KB
 
       return {
@@ -154,11 +162,10 @@ let mockProjects: Project[] = Array.from({ length: 10 }).map((_, index) => {
         name: fileName,
         type: fileType,
         size: fileSize,
-        url: "#",
-        thumbnailUrl:
-          fileType.includes("image")
-            ? `https://picsum.photos/seed/${fileId}/400/300`
-            : `/placeholder.svg`,
+        url: '#',
+        thumbnailUrl: fileType.includes('image')
+          ? `https://picsum.photos/seed/${fileId}/400/300`
+          : `/placeholder.svg`,
         uploadedAt: new Date(
           new Date(createdAt).getTime() +
             Math.floor(Math.random() * 20) * 24 * 60 * 60 * 1000
@@ -201,7 +208,9 @@ export const api = {
     return simulateNetwork(project);
   },
 
-  createProject: async (project: Omit<Project, "id" | "createdAt" | "updatedAt" | "tasks" | "files">): Promise<Project> => {
+  createProject: async (
+    project: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'tasks' | 'files'>
+  ): Promise<Project> => {
     const newProject: Project = {
       id: `project-${mockProjects.length + 1}`,
       ...project,
@@ -210,21 +219,24 @@ export const api = {
       tasks: [],
       files: [],
     };
-    
+
     mockProjects.push(newProject);
     return simulateNetwork(newProject);
   },
 
-  updateProject: async (id: string, updates: Partial<Project>): Promise<Project | undefined> => {
+  updateProject: async (
+    id: string,
+    updates: Partial<Project>
+  ): Promise<Project | undefined> => {
     const index = mockProjects.findIndex((p) => p.id === id);
     if (index === -1) return undefined;
-    
+
     mockProjects[index] = {
       ...mockProjects[index],
       ...updates,
       updatedAt: new Date().toISOString(),
     };
-    
+
     return simulateNetwork(mockProjects[index]);
   },
 
@@ -240,7 +252,10 @@ export const api = {
     return simulateNetwork(project?.tasks || []);
   },
 
-  getTask: async (projectId: string, taskId: string): Promise<Task | undefined> => {
+  getTask: async (
+    projectId: string,
+    taskId: string
+  ): Promise<Task | undefined> => {
     const project = mockProjects.find((p) => p.id === projectId);
     const task = project?.tasks.find((t) => t.id === taskId);
     return simulateNetwork(task);
@@ -248,21 +263,21 @@ export const api = {
 
   createTask: async (
     projectId: string,
-    task: Omit<Task, "id" | "projectId" | "createdAt">
+    task: Omit<Task, 'id' | 'projectId' | 'createdAt'>
   ): Promise<Task | undefined> => {
     const projectIndex = mockProjects.findIndex((p) => p.id === projectId);
     if (projectIndex === -1) return undefined;
-    
+
     const newTask: Task = {
       id: `task-${projectId}-${mockProjects[projectIndex].tasks.length + 1}`,
       projectId,
       ...task,
       createdAt: new Date().toISOString(),
     };
-    
+
     mockProjects[projectIndex].tasks.push(newTask);
     mockProjects[projectIndex].updatedAt = new Date().toISOString();
-    
+
     return simulateNetwork(newTask);
   },
 
@@ -273,34 +288,36 @@ export const api = {
   ): Promise<Task | undefined> => {
     const projectIndex = mockProjects.findIndex((p) => p.id === projectId);
     if (projectIndex === -1) return undefined;
-    
+
     const taskIndex = mockProjects[projectIndex].tasks.findIndex(
       (t) => t.id === taskId
     );
     if (taskIndex === -1) return undefined;
-    
+
     mockProjects[projectIndex].tasks[taskIndex] = {
       ...mockProjects[projectIndex].tasks[taskIndex],
       ...updates,
     };
-    
+
     mockProjects[projectIndex].updatedAt = new Date().toISOString();
-    
+
     return simulateNetwork(mockProjects[projectIndex].tasks[taskIndex]);
   },
 
   deleteTask: async (projectId: string, taskId: string): Promise<boolean> => {
     const projectIndex = mockProjects.findIndex((p) => p.id === projectId);
     if (projectIndex === -1) return false;
-    
+
     const initialLength = mockProjects[projectIndex].tasks.length;
     mockProjects[projectIndex].tasks = mockProjects[projectIndex].tasks.filter(
       (t) => t.id !== taskId
     );
-    
+
     mockProjects[projectIndex].updatedAt = new Date().toISOString();
-    
-    return simulateNetwork(initialLength > mockProjects[projectIndex].tasks.length);
+
+    return simulateNetwork(
+      initialLength > mockProjects[projectIndex].tasks.length
+    );
   },
 
   // Files
@@ -309,7 +326,10 @@ export const api = {
     return simulateNetwork(project?.files || []);
   },
 
-  getFile: async (projectId: string, fileId: string): Promise<File | undefined> => {
+  getFile: async (
+    projectId: string,
+    fileId: string
+  ): Promise<File | undefined> => {
     const project = mockProjects.find((p) => p.id === projectId);
     const file = project?.files.find((f) => f.id === fileId);
     return simulateNetwork(file);
@@ -317,36 +337,38 @@ export const api = {
 
   uploadFile: async (
     projectId: string,
-    file: Omit<File, "id" | "projectId" | "uploadedAt">
+    file: Omit<File, 'id' | 'projectId' | 'uploadedAt'>
   ): Promise<File | undefined> => {
     const projectIndex = mockProjects.findIndex((p) => p.id === projectId);
     if (projectIndex === -1) return undefined;
-    
+
     const newFile: File = {
       id: `file-${projectId}-${mockProjects[projectIndex].files.length + 1}`,
       projectId,
       ...file,
       uploadedAt: new Date().toISOString(),
     };
-    
+
     mockProjects[projectIndex].files.push(newFile);
     mockProjects[projectIndex].updatedAt = new Date().toISOString();
-    
+
     return simulateNetwork(newFile);
   },
 
   deleteFile: async (projectId: string, fileId: string): Promise<boolean> => {
     const projectIndex = mockProjects.findIndex((p) => p.id === projectId);
     if (projectIndex === -1) return false;
-    
+
     const initialLength = mockProjects[projectIndex].files.length;
     mockProjects[projectIndex].files = mockProjects[projectIndex].files.filter(
       (f) => f.id !== fileId
     );
-    
+
     mockProjects[projectIndex].updatedAt = new Date().toISOString();
-    
-    return simulateNetwork(initialLength > mockProjects[projectIndex].files.length);
+
+    return simulateNetwork(
+      initialLength > mockProjects[projectIndex].files.length
+    );
   },
 
   // Users
