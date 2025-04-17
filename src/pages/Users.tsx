@@ -26,6 +26,7 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 
 interface User {
   id: string;
@@ -76,6 +77,8 @@ const Users = () => {
     },
   ]);
   const [selectedItem, setSelectedItem] = useState<User | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -118,8 +121,17 @@ const Users = () => {
   };
 
   const onDelete = (item: User) => {
-    setItems(items.filter((i) => i.id !== item.id));
-    toast.success('User deleted successfully');
+    setUserToDelete(item);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (userToDelete) {
+      setItems(items.filter((i) => i.id !== userToDelete.id));
+      toast.success('User deleted successfully');
+      setUserToDelete(null);
+    }
+    setDeleteDialogOpen(false);
   };
 
   const handleSave = (formData: Partial<User>) => {
@@ -241,6 +253,14 @@ const Users = () => {
           </Form>
         </DialogContent>
       </Dialog>
+      
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        setOpen={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title="Delete User"
+        description="Are you sure you want to delete this user? This action cannot be undone."
+      />
     </div>
   );
 };
