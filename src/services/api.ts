@@ -6,12 +6,19 @@ export type Priority = 'low' | 'medium' | 'high';
 
 export interface Project {
   id: string;
-  title: string;
+  nom: string;
   description: string;
   status: ProjectStatus;
-  type: ProjectType;
-  createdAt: string;
-  updatedAt: string;
+  budget: number;
+  type_projet: ProjectType;
+  date_acquisition: string;
+  date_debut: string;
+  date_fin: string;
+  date_cloture: string;
+  beneficiaire_id: string;
+  expert_id: string;
+  created_at: string;
+  updated_at: string;
   tasks: Task[];
   files: File[];
 }

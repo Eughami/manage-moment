@@ -34,7 +34,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { Loader2 } from 'lucide-react';
 
-interface Expert {
+export interface Expert {
   id: string;
   nom: string;
   specialite: string;

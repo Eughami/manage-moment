@@ -34,7 +34,7 @@ import {
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 
-interface Beneficiary {
+export interface Beneficiary {
   id: string;
   nom: string;
   address: string;
