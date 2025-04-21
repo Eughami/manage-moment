@@ -72,7 +72,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
               {project.description}
             </CardDescription>
           </div>
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
               <Button
                 variant="ghost"
@@ -102,7 +102,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
         </CardHeader>
         <CardContent className="p-4 pt-2">
           <div className="flex flex-wrap gap-2 mt-2">

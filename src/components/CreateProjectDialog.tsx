@@ -94,234 +94,263 @@ export function CreateProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>
-            {mode === 'create' ? 'Create New Project' : 'Edit Project'}
-          </DialogTitle>
-          <DialogDescription>
-            {mode === 'create'
-              ? 'Add a new project to your dashboard.'
-              : 'Edit your project details.'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[500px] w-full h-full sm:h-auto max-h-screen sm:max-h-[90vh] flex flex-col p-0">
+        <div className="p-6 border-b">
+          <DialogHeader>
+            <DialogTitle>
+              {mode === 'create' ? 'Create New Project' : 'Edit Project'}
+            </DialogTitle>
+            <DialogDescription>
+              {mode === 'create'
+                ? 'Add a new project to your dashboard.'
+                : 'Edit your project details.'}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
+            className="flex flex-col flex-1 overflow-hidden"
           >
-            <FormField
-              control={form.control}
-              name="nom"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom du Projet</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter nom du projet" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter project description"
-                      {...field}
-                      rows={3}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="budget"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Budget</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter project budget"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <FormField
                 control={form.control}
-                name="type_projet"
+                name="nom"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Type</FormLabel>
+                    <FormLabel>Nom du Projet</FormLabel>
+                    <FormControl>
+                      <Input
+                        key="nom"
+                        placeholder="Enter nom du projet"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter project description"
+                        {...field}
+                        rows={3}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="budget"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Budget</FormLabel>
+                    <FormControl>
+                      <Input
+                        key="budget"
+                        type="number"
+                        placeholder="Enter project budget"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="type_projet"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select project type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="development">
+                            Development
+                          </SelectItem>
+                          <SelectItem key="design" value="design">
+                            Design
+                          </SelectItem>
+                          <SelectItem key="marketing" value="marketing">
+                            Marketing
+                          </SelectItem>
+                          <SelectItem key="research" value="research">
+                            Research
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Statut</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem key="active" value="active">
+                            Active
+                          </SelectItem>
+                          <SelectItem key="completed" value="completed">
+                            Completed
+                          </SelectItem>
+                          <SelectItem key="on-hold" value="on-hold">
+                            On Hold
+                          </SelectItem>
+                          <SelectItem key="cancelled" value="cancelled">
+                            Cancelled
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Date Fields - One per row */}
+                <FormField
+                  control={form.control}
+                  name="date_acquisition"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date d'acquisition</FormLabel>
+                      <FormControl>
+                        <Input key="d_ac" type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="date_debut"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date de début</FormLabel>
+                      <FormControl>
+                        <Input key="d_db" type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="date_fin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date de fin</FormLabel>
+                      <FormControl>
+                        <Input key="d_fi" type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="date_cloture"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date de clôture</FormLabel>
+                      <FormControl>
+                        <Input key="d_cl" type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              {/* Beneficiaire Select */}
+              <FormField
+                control={form.control}
+                name="beneficiaire_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bénéficiaire</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select project type" />
+                          <SelectValue placeholder="Sélectionnez un bénéficiaire" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="development">Development</SelectItem>
-                        <SelectItem value="design">Design</SelectItem>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="research">Research</SelectItem>
+                        {beneficiairies.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.nom}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {/* Expert Select */}
               <FormField
                 control={form.control}
-                name="status"
+                name="expert_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Statut</FormLabel>
+                    <FormLabel>Expert</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
+                          <SelectValue placeholder="Sélectionnez un expert" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="on-hold">On Hold</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                        {experts.map((e) => (
+                          <SelectItem key={e.id} value={e.id}>
+                            {e.nom}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Date Fields - One per row */}
-              <FormField
-                control={form.control}
-                name="date_acquisition"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date d'acquisition</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="date_debut"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date de début</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="date_fin"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date de fin</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="date_cloture"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date de clôture</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            {/* Beneficiaire Select */}
-            <FormField
-              control={form.control}
-              name="beneficiaire_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bénéficiaire</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez un bénéficiaire" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {beneficiairies.map((b) => (
-                        <SelectItem value={b.id}>{b.nom}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Expert Select */}
-            <FormField
-              control={form.control}
-              name="expert_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Expert</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez un expert" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {experts.map((e) => (
-                        <SelectItem value={e.id}>{e.nom}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
+            <div className="sticky bottom-0 bg-white border-t p-4 flex justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -336,7 +365,7 @@ export function CreateProjectDialog({
                   ? 'Create Project'
                   : 'Save Changes'}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
       </DialogContent>

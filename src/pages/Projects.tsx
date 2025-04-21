@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { Project, api, ProjectStatus, ProjectType } from '@/services/api';
+import { useState } from 'react';
 import { ProjectCard } from '@/components/ProjectCard';
 import { CreateProjectDialog } from '@/components/CreateProjectDialog';
 import {
@@ -7,23 +6,16 @@ import {
   SortFilterOptions,
   SortOption,
 } from '@/components/SortFilterBar';
-import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { CreateProject, createProject, getProjects } from '@/services/project';
+import { createProject, getProjects } from '@/services/project';
 import { getExperts } from '@/services/experts';
 import { getBeneficiariess } from '@/services/beneficiaries';
 
 export default function Projects() {
-  // const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [filterOptions, setFilterOptions] = useState<SortFilterOptions>({
     search: '',
     type_projet: 'all',
@@ -78,36 +70,6 @@ export default function Projects() {
     };
     createMutation.mutate(payload);
   };
-
-  // const handleEditProject = async (project: any) => {
-  //   if (!projectToEdit) return;
-
-  //   try {
-  //     await api.updateProject(projectToEdit.id, project);
-  //     await fetchProjects();
-  //     setEditDialogOpen(false);
-  //     setProjectToEdit(null);
-  //     toast.success('Project updated successfully');
-  //   } catch (error) {
-  //     console.error('Error updating project:', error);
-  //     toast.error('Failed to update project');
-  //   }
-  // };
-
-  // const handleDeleteProject = async () => {
-  //   if (!projectToDelete) return;
-
-  //   try {
-  //     await api.deleteProject(projectToDelete.id);
-  //     await fetchProjects();
-  //     setDeleteDialogOpen(false);
-  //     setProjectToDelete(null);
-  //     toast.success('Project deleted successfully');
-  //   } catch (error) {
-  //     console.error('Error deleting project:', error);
-  //     toast.error('Failed to delete project');
-  //   }
-  // };
 
   // Filter and sort projects based on the current filter options
   const filteredProjects = (projects?.data || [])
@@ -223,14 +185,8 @@ export default function Projects() {
             <ProjectCard
               key={project.id}
               project={project}
-              onEdit={(project) => {
-                setProjectToEdit(project);
-                setEditDialogOpen(true);
-              }}
-              onDelete={(project) => {
-                setProjectToDelete(project);
-                setDeleteDialogOpen(true);
-              }}
+              onEdit={() => {}}
+              onDelete={() => {}}
             />
           ))}
         </div>
@@ -246,24 +202,6 @@ export default function Projects() {
         experts={experts?.data || []}
         beneficiairies={beneficiairies?.data || []}
       />
-
-      {/* Edit Project Dialog */}
-      {/* <CreateProjectDialog
-        open={editDialogOpen}
-        setOpen={setEditDialogOpen}
-        onSubmit={handleEditProject}
-        initialData={projectToEdit || undefined}
-        mode="edit"
-      /> */}
-
-      {/* Delete Confirmation Dialog */}
-      {/* <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        setOpen={setDeleteDialogOpen}
-        onConfirm={handleDeleteProject}
-        title="Delete Project"
-        description={`Are you sure you want to delete "${projectToDelete?.title}"? This action cannot be undone and will remove all tasks and files associated with this project.`}
-      /> */}
     </div>
   );
 }

@@ -33,8 +33,8 @@ service.interceptors.response.use(
     let message = '';
     // request happened and server responded
     if (error.response) {
-      console.log();
-      message = error.response.data.error.toString();
+      const errMsg = error.response.data;
+      message = errMsg?.message || errMsg.error.toString();
 
       if (error.response.status === 401 || error.response.status === 403) {
         // log out if this not a login request
