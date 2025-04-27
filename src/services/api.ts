@@ -17,10 +17,10 @@ export interface Project {
   date_cloture: string;
   beneficiaire_id: string;
   expert_id: string;
+  expert: { id: string };
+  beneficiaire: { id: string };
   created_at: string;
   updated_at: string;
-  tasks: Task[];
-  files: File[];
 }
 
 export interface Task {

@@ -1,11 +1,12 @@
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { humanDate } from '@/lib/utils';
+import { Project } from '@/services/api';
 
 interface ProjectOverviewProps {
-  projectId?: string;
+  project: Project;
 }
 
-const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
+const ProjectOverview = ({ project }: ProjectOverviewProps) => {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card>
@@ -13,15 +14,15 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
           <CardTitle>Status</CardTitle>
         </CardHeader>
         <CardContent>
-          <span className="text-2xl font-semibold">In Progress</span>
+          <span className="text-2xl font-semibold">{project.status}</span>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Tasks</CardTitle>
+          <CardTitle>Budget</CardTitle>
         </CardHeader>
         <CardContent>
-          <span className="text-2xl font-semibold">12</span>
+          <span className="text-2xl font-semibold">{project.budget}</span>
         </CardContent>
       </Card>
       <Card>
@@ -29,7 +30,9 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
           <CardTitle>Due Date</CardTitle>
         </CardHeader>
         <CardContent>
-          <span className="text-2xl font-semibold">Mar 15, 2024</span>
+          <span className="text-2xl font-semibold">
+            {humanDate(project.date_fin)}
+          </span>
         </CardContent>
       </Card>
     </div>

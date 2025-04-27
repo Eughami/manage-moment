@@ -1,61 +1,53 @@
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TaskList } from "@/components/TaskList";
-import { FileGrid } from "@/components/FileGrid";
-import ProjectOverview from "@/components/ProjectOverview";
-import { Task, TaskStatus, File, User } from "@/services/api";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TaskList } from '@/components/TaskList';
+import { FileGrid } from '@/components/FileGrid';
+import ProjectOverview from '@/components/ProjectOverview';
+import { Task, TaskStatus, File, User, Project } from '@/services/api';
+import { Button } from '../ui/button';
+import { Plus } from 'lucide-react';
 
 interface ProjectTabsProps {
-  projectId?: string;
-  tasks: Task[];
-  files: File[];
-  currentUser: User;
-  onTaskSelect: (task: Task) => void;
-  onTaskDelete: (taskId: string) => void;
-  onAddTask: () => void;
-  onTaskStatusChange: (taskId: string, status: TaskStatus) => void;
-  onFileDelete: (fileId: string) => void;
-  onFileUpload: (file: Omit<File, "id" | "projectId" | "uploadedAt">) => void;
+  project: Project;
 }
 
-export function ProjectTabs({
-  projectId,
-  tasks,
-  files,
-  currentUser,
-  onTaskSelect,
-  onTaskDelete,
-  onAddTask,
-  onTaskStatusChange,
-  onFileDelete,
-  onFileUpload,
-}: ProjectTabsProps) {
+export function ProjectTabs({ project }: ProjectTabsProps) {
   return (
     <Tabs defaultValue="overview">
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="list">List</TabsTrigger>
-        <TabsTrigger value="files">Files</TabsTrigger>
+        <TabsTrigger value="finances">finances</TabsTrigger>
+        <TabsTrigger value="techniques">techniques</TabsTrigger>
       </TabsList>
       <TabsContent value="overview">
-        <ProjectOverview projectId={projectId} />
+        <ProjectOverview project={project} />
       </TabsContent>
-      <TabsContent value="list">
-        <TaskList
-          tasks={tasks}
-          onTaskSelect={onTaskSelect}
-          onTaskDelete={onTaskDelete}
-          onAddTask={onAddTask}
-          onTaskStatusChange={onTaskStatusChange}
-        />
+      <TabsContent value="finances">
+        <div className="bg-white/60 backdrop-blur-md rounded-xl border p-12 text-center">
+          <h3 className="text-xl font-semibold mb-2">
+            Pas d'operations financière
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            Créez votre première opération financière pour commencer.
+          </p>
+          <Button onClick={() => console.log('Trigger create modal')}>
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter opération
+          </Button>
+        </div>
       </TabsContent>
-      <TabsContent value="files">
-        <FileGrid
-          files={files}
-          onFileDelete={onFileDelete}
-          onFileUpload={onFileUpload}
-          currentUser={currentUser}
-        />
+      <TabsContent value="techniques">
+        <div className="bg-white/60 backdrop-blur-md rounded-xl border p-12 text-center">
+          <h3 className="text-xl font-semibold mb-2">
+            Pas d'operations technique
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            Créez votre première opération technique pour commencer.
+          </p>
+          <Button onClick={() => console.log('Trigger create modal')}>
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter opération
+          </Button>
+        </div>
       </TabsContent>
     </Tabs>
   );
