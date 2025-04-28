@@ -50,7 +50,7 @@ import {
 import { getExperts } from '@/services/experts';
 import { Expert } from './Experts';
 
-interface Technique {
+export interface Technique {
   id: string;
   libelle: string;
   date_debut: string;
@@ -242,7 +242,7 @@ const Techniques = ({ pid }: TechniquesProps) => {
   return (
     <div className="page-container p-4 md:p-6">
       <DataTable
-        title="Technical Records" // Updated title
+        title="Operations Technique"
         columns={columns}
         data={techniques?.data || []} // Use fetched data
         onAddNew={onAddNew}

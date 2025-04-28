@@ -1,3 +1,6 @@
+import { Finance } from '@/pages/OperationFinance';
+import { Technique } from '@/pages/OperationTechnique';
+
 // Types
 export type ProjectStatus = 'active' | 'completed' | 'on-hold' | 'cancelled';
 export type ProjectType = 'development' | 'design' | 'marketing' | 'research';
@@ -21,6 +24,8 @@ export interface Project {
   beneficiaire: { id: string };
   created_at: string;
   updated_at: string;
+  operations_finance?: Finance[];
+  operations_technique?: Technique[];
 }
 
 export interface Task {

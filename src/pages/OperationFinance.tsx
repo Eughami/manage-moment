@@ -34,7 +34,7 @@ import {
   updateFinance,
 } from '@/services/finances';
 
-interface Finance {
+export interface Finance {
   id: string;
   libelle_finan: string;
   depense: number;

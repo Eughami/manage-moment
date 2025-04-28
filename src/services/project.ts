@@ -31,7 +31,7 @@ export const createProject = async (u: CreateProject) => {
 
 export const getProject = async (id: string) => {
   const res = await fetch({
-    url: `projects/${id}`,
+    url: `projects/${id}?join=operations_finance&join=operations_technique`,
     method: 'GET',
   });
 

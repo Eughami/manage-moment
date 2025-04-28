@@ -14,7 +14,6 @@ import { getBeneficiariess } from '@/services/beneficiaries';
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
